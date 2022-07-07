@@ -1,3 +1,17 @@
+'''
+AudiLog class includes the following functions
+
+* bleTag: Searches AuditLog for presence of ble_tag message
+* CurlyBrackets: Searches AuditLog for presence of multiple curly brackets
+  Multiple curly brackets }}} indicate potential wiring issue
+
+* StartEvents: This functions checks START event of VC and compares it against number of Ign On events
+
+* PowerIssue: Checks AuditLog for presene of power_up or power_off events.
+  If these messages are present, it may indicate beacon wiring issue
+
+'''
+
 import re
 from urllib.request import urlopen
 import requests
@@ -10,7 +24,7 @@ class Audit:
     x = int
 
     def __init__(self):
-        print('this is from the main audit class')
+
         self.url = 'http://gam-ra-production.contigo.lan:8013/developer/misc/audit_log/gprs_extract.php'
         self.page = urlopen(self.url)
         self.htmlsource = self.page.read()
@@ -21,26 +35,37 @@ class Audit:
         return state
 
 
-    def inputs(self, bid, tday):
+    def inputs(self, bid, fromDate, toDate):
 
         currentMonth = datetime.now().month
         currentYear = datetime.now().year
         print('current month is .......', currentYear)
         self.bid = bid
-        self.tday = tday
-        fday = int(tday)
-        print('fday......is ', fday)
+        self.fromDate = fromDate
+        self.toDate = toDate
+
+
+        fday = int(fromDate.day)
+        tday = int(toDate.day)
+        fmth = int(fromDate.month)
+        tmth = int(toDate.month)
+        fyr = int(fromDate.year)
+        tyr = int(toDate.year)
+
+
+
+        #print('fday......is ', fday)
         print('inputs data..', bid, fday, tday)
         payload = {'bid': bid,
                    'esn': '',
                    'serial_no': '',
-                   'fyr': str(currentYear),
-                   'fmth': str(currentMonth),
+                   'fyr': fyr,
+                   'fmth': fmth,
                    'fday': fday,
                    'fhr': '00',
                    'fmin': '00',
-                   'tyr': str(currentYear),
-                   'tmth': str(currentMonth),
+                   'tyr': tyr,
+                   'tmth': tmth,
                    'tday': tday,
                    'thr': '23',
                    'tmin': '59'
@@ -48,6 +73,8 @@ class Audit:
         r = requests.post(self.url, data=payload)
         audit = r.text
         return audit
+
+
 
     def bleTag(self, audit):
 
@@ -78,6 +105,10 @@ class Audit:
 
         return message
 
+    '''
+    PowerIssue: Checks AuditLog for presene of power_up or power_off events.
+    If these messages are present, it may indicate beacon wiring issue
+    '''
 
     def powerIssue(self, audit):
 
@@ -91,7 +122,9 @@ class Audit:
 
         return message
 
-
+    '''
+    StartEvents: This functions checks START event of VC and compares it against number of Ign On events
+    '''
 
     def StartEvents(self, audit):
         self.audit = audit
@@ -146,7 +179,7 @@ class Audit:
             x= 0
             self.status(x)
         elif case5:
-            message = 'VC has not generated any Start event after ignition On. VC or wiring has problem'
+            message = 'VC has not generated any Start event after ignOn. Either VC is not connected or wiring has problem'
             x=0
         elif case6:
             message = 'Start and Ign On events are same, VC is OK'
