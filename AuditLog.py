@@ -17,6 +17,7 @@ from urllib.request import urlopen
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
+import re
 
 
 class Audit:
@@ -92,9 +93,17 @@ class Audit:
         self.audit = audit
 
         number_of_curly_bracket = audit.count('} }')
+        Timestamp = audit.find('} }')
+        print('Timestamp of curly bracket ...', Timestamp)
+        sTime = Timestamp-450
+        eTime = sTime+30
+        Timestamp1 = re.sub("[^\d\.]","",audit[sTime:eTime])
+
+        print('location of curly brackt ....',Timestamp1)
+
         print('number of curly brackets..........', number_of_curly_bracket)
         if number_of_curly_bracket > 1:
-            message = 'The wirings could have some issues, there are', number_of_curly_bracket, ' curly brackets ~} } }'
+            message = 'Wiring issues, there are', number_of_curly_bracket, ' curly brackets. Most recent one at ',Timestamp1
             print(message)
         elif number_of_curly_bracket == 0:
             message = 'No symptoms of loose connection'
@@ -182,7 +191,7 @@ class Audit:
             message = 'VC has not generated any Start event after ignOn. Either VC is not connected or wiring has problem'
             x=0
         elif case6:
-            message = 'Start and Ign On events are same, VC is OK'
+            message = 'Start and Ign On events are same, VC is OK '
             x=0
             self.status(x)
         else:
